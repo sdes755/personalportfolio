@@ -32,6 +32,7 @@
                 emailjs.sendForm('contact_service', 'contact_form', this)
                     .then(() => {
                         console.log('SUCCESS!');
+                        this.reset();
                     }, (error) => {
                         console.log('FAILED...', error);
                     });
