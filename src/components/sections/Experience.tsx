@@ -50,7 +50,7 @@ export default function Experience() {
             </span>
           </h2>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            My professional journey and the experiences that have shaped my career in web development.
+            My professional journey and the experiences that have shaped my career so far.
           </p>
         </div>
 
