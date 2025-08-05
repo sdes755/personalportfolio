@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, Send, MessageSquare, Github, Linkedin, Twitter, CheckCircle, AlertCircle } from "lucide-react"
+import { Mail, Phone, MapPin, Send, MessageSquare, Github, Linkedin, CheckCircle, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
