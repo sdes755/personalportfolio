@@ -19,6 +19,15 @@ interface Experience {
 export default function Experience() {
   const experiences: Experience[] = [
     {
+      title: "Software Engineer Intern",
+      company: "Orion Health",
+      period: "November 2025 - February 2026",
+      location: "Auckland, New Zealand",
+      description:
+        "Currently placed on the Patient Engagement Team working on the Digital Front Door Product.",
+      achievements: ["Bug tickets so far."],
+    },
+    {
       title: "Software Engineering Intern",
       company: "Aderant",
       period: "Nov 2024 - Feb 2025, July 2025 - Present",
@@ -42,16 +51,7 @@ export default function Experience() {
         "Conducted one-on-one and group sessions whilst utilising creative and engaging teaching methods to promote participation and ensure knowledge retention.",
         "Tracked student progress, provided regular feedback to parents on student development, and catered to feedback received.",
       ],
-    },
-    {
-      title: "Software Engineer Intern",
-      company: "Orion Health",
-      period: "November 2025 - February 2026",
-      location: "Auckland, New Zealand",
-      description:
-        "Currently placed on the Patient Engagement Team working on the Digital Front Door Product.",
-      achievements: ["Still to come!"],
-    },
+    }
   ];
 
   return (
