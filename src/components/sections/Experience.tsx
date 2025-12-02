@@ -1,13 +1,19 @@
-import { Calendar, MapPin } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Calendar, MapPin } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface Experience {
-  title: string
-  company: string
-  period: string
-  location: string
-  description: string
-  achievements: string[]
+  title: string;
+  company: string;
+  period: string;
+  location: string;
+  description: string;
+  achievements: string[];
 }
 
 export default function Experience() {
@@ -24,7 +30,7 @@ export default function Experience() {
         "Resolved ~20 Client-Facing bugs and authored 3 new Feature Pages for the Cloud-GL application, directly enhancing usability and client requirements.",
         "Co-Developed a production-grade API for a major application module, enabling critical functionality and supporting scalability across the Cloud-GL platform.",
       ],
-    },  
+    },
     {
       title: "Lead Mathematics Tutor",
       company: "Seriously Addictive Mathematics",
@@ -37,7 +43,16 @@ export default function Experience() {
         "Tracked student progress, provided regular feedback to parents on student development, and catered to feedback received.",
       ],
     },
-  ]
+    {
+      title: "Software Engineer Intern",
+      company: "Orion Health",
+      period: "November 2025 - February 2026",
+      location: "Auckland, New Zealand",
+      description:
+        "Currently placed on the Patient Engagement Team working on the Digital Front Door Product.",
+      achievements: ["Still to come!"],
+    },
+  ];
 
   return (
     <section className="relative z-10 py-20">
@@ -50,7 +65,8 @@ export default function Experience() {
             </span>
           </h2>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            My professional journey and the experiences that have shaped my career so far.
+            My professional journey and the experiences that have shaped my
+            career so far.
           </p>
         </div>
 
@@ -73,8 +89,12 @@ export default function Experience() {
                   <CardHeader>
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                       <div>
-                        <CardTitle className="text-white text-xl">{exp.title}</CardTitle>
-                        <CardDescription className="text-blue-300 font-medium">{exp.company}</CardDescription>
+                        <CardTitle className="text-white text-xl">
+                          {exp.title}
+                        </CardTitle>
+                        <CardDescription className="text-blue-300 font-medium">
+                          {exp.company}
+                        </CardDescription>
                       </div>
                       <div className="flex flex-col md:items-end gap-1">
                         <div className="flex items-center gap-2 text-gray-400 text-sm">
@@ -91,10 +111,15 @@ export default function Experience() {
                   <CardContent>
                     <p className="text-gray-300 mb-4">{exp.description}</p>
                     <div className="space-y-2">
-                      <h4 className="text-white font-medium">Key Achievements:</h4>
+                      <h4 className="text-white font-medium">
+                        Key Achievements:
+                      </h4>
                       <ul className="space-y-1">
                         {exp.achievements.map((achievement, i) => (
-                          <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
+                          <li
+                            key={i}
+                            className="text-gray-300 text-sm flex items-start gap-2"
+                          >
                             <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0" />
                             {achievement}
                           </li>
@@ -109,5 +134,5 @@ export default function Experience() {
         </div>
       </div>
     </section>
-  )
+  );
 }

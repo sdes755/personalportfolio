@@ -14,7 +14,7 @@ interface Project {
 export default function Projects() {
   const projects: Project[] = [
     {
-      title: "Professor Turing - In Progress",
+      title: "Professor Turing",
       description:"Professor Turing is an AI-Agentic powered educational platform designed to support computer science students through Socratic tutoring and conceptual interview preparation. Built with a modern full-stack architecture, it integrates cutting-edge AI Agent providers like OpenAI GPT-4, Gemini, and Claude via the Vibekit SDK. The platform includes a VS Code extension, personalised student insights, coursebook parsing, and multi-agent support, making it a powerful tool for CS education.",
       tech: ["React.js", "TypeScript", "Node.js", "PostgreSQL", "Vibekit SDK", "LLMs"],
       image: "/professorturing.png",
