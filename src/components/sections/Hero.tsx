@@ -1,181 +1,144 @@
-"use client"
-
-import {
-  Mail,
-  ArrowRight,
-  Code,
-  Palette,
-  Eye,
-} from "lucide-react"
+import { motion, type Variants } from "framer-motion"
+import { useReducedMotionPref as useReducedMotion } from "@/hooks/useMotionPref"
+import { ArrowRight, ChevronDown, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import TypingText from "@/components/motion/TypingText"
+import HeroBackground from "@/components/layout/HeroBackground"
+import { profile, socials } from "@/data/profile"
+import { socialIcons } from "@/lib/icons"
 
-interface HeroProps {
-  isVisible: boolean
+const EASE = [0.21, 0.47, 0.32, 0.98] as const
+
+const item: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } },
 }
 
-export default function Hero({ isVisible }: HeroProps) {
-  const skills = ["React", "TypeScript", "Next.js", "Java", "Node.js", "Express.js"]
+export default function Hero() {
+  const reducedMotion = useReducedMotion()
 
   return (
-    <section className="relative z-10 flex items-center justify-center min-h-[calc(100vh-100px)]">
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-          {/* Left Content */}
-          <div className="flex-1 text-center lg:text-left space-y-8">
-            {/* Main Heading */}
-            <div
-              className={`space-y-4 transition-all duration-1000 delay-500 ${
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-              }`}
-            >
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
-                Hi, I'm{" "}
-                <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-pulse">
-                  Sahan De Silva
-                </span>
-              </h1>
-              <h2 className="text-blue text-2xl md:text-3xl lg:text-4xl text-gray-300 font-light">
-                Penultimate Software Engineering and Finance Student
-              </h2>
-            </div>
+    <section id="home" aria-label="Introduction" className="relative flex min-h-svh items-center overflow-hidden">
+      <HeroBackground />
 
-            {/* Description */}
-            <div
-              className={`transition-all duration-1000 delay-700 ${
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-              }`}
-            >
-              <p className="text-lg md:text-xl text-gray-400 max-w-2xl leading-relaxed">
-                I enjoy building responsive, user-friendly web apps with modern technologies, always aiming to deliver clean, efficient, and cutting-edge solutions.
-              </p>
-            </div>
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pt-24 pb-16 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16 lg:pt-16">
+        <motion.div
+          initial={reducedMotion ? false : "hidden"}
+          animate="visible"
+          transition={{ staggerChildren: 0.09, delayChildren: 0.1 }}
+          className="order-2 lg:order-1"
+        >
+          {/* Terminal intro */}
+          <motion.div variants={item} className="mb-6 space-y-1 font-mono text-sm">
+            <p className="text-fg-muted">
+              <span aria-hidden="true">~ $ </span>
+              <TypingText text="whoami" startDelay={200} speed={32} cursorWhileTypingOnly />
+            </p>
+            <p className="text-syntax-green">
+              <TypingText
+                text="sahan-de-silva — software engineer"
+                startDelay={650}
+                speed={22}
+                cursorWhileTypingOnly
+              />
+            </p>
+          </motion.div>
 
-            {/* Skills Tags */}
-            <div
-              className={`transition-all duration-1000 delay-900 ${
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-              }`}
-            >
-              <div className="flex flex-wrap justify-center lg:justify-start gap-3">
-                {skills.map((skill, index) => (
-                  <span
-                    key={skill}
-                    className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-medium border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 cursor-default"
-                    style={{
-                      animationDelay: `${1000 + index * 100}ms`,
-                    }}
+          <motion.h1
+            variants={item}
+            className="text-5xl font-bold tracking-tight text-fg md:text-6xl xl:text-7xl"
+          >
+            Sahan <span className="text-accent-bright">De Silva</span>
+          </motion.h1>
+
+          <motion.p variants={item} className="mt-5 text-lg text-fg-body md:text-xl">
+            {profile.title} <span className="text-fg-muted">@</span>{" "}
+            <span className="text-accent-bright">{profile.university}</span>
+          </motion.p>
+
+          <motion.p variants={item} className="mt-4 max-w-xl leading-7 text-fg-muted">
+            {profile.tagline}
+          </motion.p>
+
+          <motion.div variants={item} className="mt-8 flex flex-wrap items-center gap-3">
+            <Button size="lg" asChild>
+              <a href="#projects">
+                View Projects
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <a href={profile.resume} target="_blank" rel="noopener noreferrer">
+                <Download className="h-4 w-4" aria-hidden="true" />
+                Download CV
+              </a>
+            </Button>
+          </motion.div>
+
+          <motion.ul variants={item} className="mt-8 flex items-center gap-2">
+            {socials.map((social) => {
+              const Icon = socialIcons[social.icon]
+              const newTab = social.href.startsWith("http") || social.href.endsWith(".pdf")
+              return (
+                <li key={social.label}>
+                  <motion.a
+                    href={social.href}
+                    aria-label={social.label}
+                    target={newTab ? "_blank" : undefined}
+                    rel={newTab ? "noopener noreferrer" : undefined}
+                    whileHover={reducedMotion ? undefined : { y: -3 }}
+                    className="flex rounded-md border border-line bg-surface p-2.5 text-fg-muted transition-colors hover:border-line-bright hover:text-accent-bright"
                   >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </motion.a>
+                </li>
+              )
+            })}
+          </motion.ul>
+        </motion.div>
 
-            {/* Action Buttons */}
+        {/* Headshot */}
+        <motion.div
+          initial={reducedMotion ? false : { opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, ease: EASE, delay: 0.25 }}
+          className="order-1 flex justify-center lg:order-2 lg:justify-end"
+        >
+          <div className="relative">
             <div
-              className={`flex flex-col sm:flex-row gap-4 justify-center lg:justify-start transition-all duration-1000 delay-1100 ${
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-              }`}
-            >
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0 px-8 py-6 text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25"
-                onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}
-              >
-                View My Work
-                <ArrowRight className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-2 border-white/30 text-white hover:bg-white hover:text-gray-900 px-8 py-6 text-lg font-medium transition-all duration-300 hover:scale-105 backdrop-blur-sm bg-transparent"
-                onClick={() => window.open('/SahanDeSilvaResume.pdf', '_blank')}
-              >
-                <Eye className="mr-2 w-5 h-5" />
-                View CV
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-2 border-white/30 text-white hover:bg-white hover:text-gray-900 px-8 py-6 text-lg font-medium transition-all duration-300 hover:scale-105 backdrop-blur-sm bg-transparent"
-                onClick={() => window.open('/transcript.pdf', '_blank')}
-              >
-                <Eye className="mr-2 w-5 h-5" />
-                View Transcript
-              </Button>
-            </div>
-
-            {/* Contact Info */}
-            <div
-              className={`transition-all duration-1000 delay-1300 ${
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-              }`}
-            >
-              <div className="flex items-center justify-center lg:justify-start gap-6 pt-4">
-                <a
-                  href="mailto:ksahan.des@gmail.com"
-                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
-                >
-                  <Mail className="w-5 h-5" />
-                  <span className="hidden sm:inline">ksahan.des@gmail.com</span>
-                </a>
-              </div>
-            </div>
+              aria-hidden="true"
+              className="absolute -inset-8 rounded-full bg-accent opacity-30 blur-3xl"
+            />
+            <img
+              src={profile.headshot}
+              alt={`Portrait of ${profile.name}`}
+              width={763}
+              height={1102}
+              fetchPriority="high"
+              className="relative aspect-square w-56 rounded-2xl border border-line object-cover md:w-72 lg:w-80"
+            />
           </div>
-
-          {/* Right Content - Profile Image */}
-          <div className="flex-1 flex justify-center lg:justify-end">
-            <div
-              className={`relative transition-all duration-1000 delay-600 ${
-                isVisible ? "translate-y-0 opacity-100 scale-100" : "translate-y-10 opacity-0 scale-95"
-              }`}
-            >
-              {/* Animated rings */}
-              <div
-                className="absolute inset-0 rounded-full border-2 border-blue-500/30 animate-spin"
-                style={{ animationDuration: "20s" }}
-              />
-              <div
-                className="absolute inset-4 rounded-full border-2 border-purple-500/30 animate-spin"
-                style={{ animationDuration: "15s", animationDirection: "reverse" }}
-              />
-              <div
-                className="absolute inset-8 rounded-full border-2 border-pink-500/30 animate-spin"
-                style={{ animationDuration: "10s" }}
-              />
-
-              {/* Profile image container */}
-              <div className="relative w-80 h-80 md:w-96 md:h-96 rounded-full overflow-hidden border-4 border-white/20 backdrop-blur-sm shadow-2xl hover:scale-105 transition-transform duration-500">
-                <div className="absolute inset-0  from-blue-500/20 to-purple-600/20" />
-                <img
-                  src="/profilepic.jpg"
-                  alt="Sahan De Silva - Fullstack Developer"
-                  className="object-cover w-full h-full"
-                />
-
-                {/* Floating elements around image */}
-                <div
-                  className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center animate-bounce"
-                  style={{ animationDelay: "0.5s" }}
-                >
-                  <Code className="w-6 h-6 text-white" />
-                </div>
-                <div
-                  className="absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center animate-bounce"
-                  style={{ animationDelay: "1s" }}
-                >
-                  <Palette className="w-6 h-6 text-white" />
-                </div>
-                <div className="absolute top-1/2 -left-6 w-8 h-8 bg-gradient-to-r from-pink-400 to-red-500 rounded-full animate-pulse" />
-                <div
-                  className="absolute top-1/4 -right-6 w-6 h-6 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full animate-pulse"
-                  style={{ animationDelay: "1.5s" }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        </motion.div>
       </div>
+
+      {/* Scroll hint */}
+      <motion.a
+        href="#stack"
+        aria-label="Scroll to tech stack"
+        className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1 font-mono text-xs text-fg-muted transition-colors hover:text-fg-body md:flex"
+        initial={reducedMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.6, duration: 0.8 }}
+      >
+        scroll
+        <motion.span
+          aria-hidden="true"
+          animate={reducedMotion ? undefined : { y: [0, 5, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <ChevronDown className="h-4 w-4" />
+        </motion.span>
+      </motion.a>
     </section>
   )
 }

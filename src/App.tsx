@@ -1,8 +1,12 @@
-import AnimatedLandingPage from './components/AnimatedLandingPage'
-import './App.css'
+import PortfolioPage from './components/PortfolioPage'
+import { MotionPrefProvider } from './hooks/useMotionPref'
 
 function App() {
-  return <AnimatedLandingPage />
+  return (
+    <MotionPrefProvider>
+      <PortfolioPage />
+    </MotionPrefProvider>
+  )
 }
 
 export default App

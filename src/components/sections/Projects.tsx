@@ -1,112 +1,213 @@
-// import { Github, ExternalLink } from "lucide-react"
-// import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Award, ChevronsRight, ExternalLink, Github } from "lucide-react"
+import SectionHeading from "@/components/layout/SectionHeading"
+import Reveal from "@/components/motion/Reveal"
+import { projects } from "@/data/projects"
+import type { Project } from "@/data/types"
+import { cn } from "@/lib/utils"
 
-interface Project {
-  title: string
-  description: string
-  tech: string[]
-  image: string
-  github: string
-  live: string
+function ProjectLinks({ project, className }: { project: Project; className?: string }) {
+  if (!project.github && !project.live) return null
+  return (
+    <div className={cn("flex items-center gap-1", className)}>
+      {project.github && (
+        <a
+          href={project.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${project.title} on GitHub`}
+          className="rounded-md p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-accent-bright"
+        >
+          <Github className="h-5 w-5" aria-hidden="true" />
+        </a>
+      )}
+      {project.live && (
+        <a
+          href={project.live}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${project.title} live demo`}
+          className="rounded-md p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-accent-bright"
+        >
+          <ExternalLink className="h-5 w-5" aria-hidden="true" />
+        </a>
+      )}
+    </div>
+  )
+}
+
+function FeatureRow({ project, index }: { project: Project; index: number }) {
+  const flipped = index % 2 === 1
+  const href = project.live ?? project.github
+
+  const overline = (
+    <p className="font-mono text-xs text-accent">
+      featured project · {String(index + 1).padStart(2, "0")}
+      {project.status === "in-progress" && (
+        <span className="text-syntax-amber"> · in progress</span>
+      )}
+    </p>
+  )
+
+  const image = (
+    <div className="group relative overflow-hidden rounded-card border border-line">
+      <img
+        src={project.image}
+        alt={project.imageAlt}
+        width={1600}
+        height={900}
+        loading="lazy"
+        decoding="async"
+        className="aspect-video w-full object-cover object-top transition-all duration-500 group-hover:scale-[1.02]"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-accent/25 mix-blend-multiply transition-opacity duration-500 group-hover:opacity-0"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-background/40 transition-opacity duration-500 group-hover:opacity-0"
+      />
+    </div>
+  )
+
+  return (
+    <Reveal>
+      {/* Desktop: overlapping 12-col grid */}
+      <article className="relative hidden md:grid md:grid-cols-12 md:items-center">
+        <div className={cn("md:col-span-7 md:row-start-1", flipped ? "md:col-start-6" : "md:col-start-1")}>
+          {href ? (
+            <a href={href} target="_blank" rel="noopener noreferrer" aria-label={project.title}>
+              {image}
+            </a>
+          ) : (
+            image
+          )}
+        </div>
+
+        <div
+          className={cn(
+            "relative z-10 md:col-span-6 md:row-start-1",
+            flipped ? "md:col-start-1 text-left" : "md:col-start-7 text-right",
+          )}
+        >
+          {overline}
+          <h3 className="mt-2 text-2xl font-semibold text-fg md:text-3xl">
+            {href ? (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-accent-bright"
+              >
+                {project.title}
+              </a>
+            ) : (
+              project.title
+            )}
+          </h3>
+
+          {project.award && (
+            <p
+              className={cn(
+                "mt-2 flex items-center gap-2 font-mono text-xs text-syntax-amber",
+                !flipped && "justify-end",
+              )}
+            >
+              <Award className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {project.award}
+            </p>
+          )}
+
+          <div className="mt-4 rounded-card border border-line bg-surface-2/90 p-6 shadow-xl shadow-black/40 backdrop-blur-sm">
+            <p className="text-left text-sm leading-6 text-fg-body">{project.description}</p>
+            <ul className="mt-3 space-y-1.5">
+              {project.achievements.map((achievement) => (
+                <li key={achievement} className="flex gap-1.5 text-left text-[13px] leading-5 text-fg-muted">
+                  <ChevronsRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" aria-hidden="true" />
+                  {achievement}
+                </li>
+              ))}
+            </ul>
+            <ul className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4 font-mono text-xs">
+              {project.tech.map((tech) => (
+                <li
+                  key={tech}
+                  className="rounded-full border border-accent/30 bg-surface px-3 py-1 text-accent-bright transition-colors hover:border-accent/60 hover:text-fg"
+                >
+                  {tech}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <ProjectLinks project={project} className={cn("mt-3", !flipped && "justify-end")} />
+        </div>
+      </article>
+
+      {/* Mobile: single card, image as dim background */}
+      <article className="relative overflow-hidden rounded-card border border-line md:hidden">
+        <img
+          src={project.image}
+          alt=""
+          aria-hidden="true"
+          width={1600}
+          height={900}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-top opacity-10"
+        />
+        <div className="absolute inset-0 bg-background/75" aria-hidden="true" />
+        <div className="relative p-6">
+          {overline}
+          <h3 className="mt-2 text-2xl font-semibold text-fg">
+            {href ? (
+              <a href={href} target="_blank" rel="noopener noreferrer">
+                {project.title}
+              </a>
+            ) : (
+              project.title
+            )}
+          </h3>
+          {project.award && (
+            <p className="mt-2 flex items-center gap-2 font-mono text-xs text-syntax-amber">
+              <Award className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {project.award}
+            </p>
+          )}
+          <p className="mt-4 text-sm leading-6 text-fg-body">{project.description}</p>
+          <ul className="mt-3 space-y-1.5">
+            {project.achievements.map((achievement) => (
+              <li key={achievement} className="flex gap-1.5 text-[13px] leading-5 text-fg-muted">
+                <ChevronsRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" aria-hidden="true" />
+                {achievement}
+              </li>
+            ))}
+          </ul>
+          <ul className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4 font-mono text-xs">
+            {project.tech.map((tech) => (
+              <li
+                key={tech}
+                className="rounded-full border border-accent/30 bg-surface px-3 py-1 text-accent-bright"
+              >
+                {tech}
+              </li>
+            ))}
+          </ul>
+          <ProjectLinks project={project} className="mt-3" />
+        </div>
+      </article>
+    </Reveal>
+  )
 }
 
 export default function Projects() {
-  const projects: Project[] = [
-    {
-      title: "Professor Turing",
-      description:"Professor Turing is an AI-Agentic powered educational platform designed to support computer science students through Socratic tutoring and conceptual interview preparation. Built with a modern full-stack architecture, it integrates cutting-edge AI Agent providers like OpenAI GPT-4, Gemini, and Claude via the Vibekit SDK. The platform includes a VS Code extension, personalised student insights, coursebook parsing, and multi-agent support, making it a powerful tool for CS education.",
-      tech: ["React.js", "TypeScript", "Node.js", "PostgreSQL", "Vibekit SDK", "LLMs"],
-      image: "/professorturing.png",
-      github: "#",
-      live: "#",
-    },
-    {
-      title: "IntelliMock",
-      description:"IntelliMock is an AI-driven mock interview platform designed for realistic interview preparation. It supports text and voice-based interactions, real-time feedback, and personalised question generation using OpenAI via LangChain. Users can upload CVs and job descriptions for tailored interview sessions, while PDF analytics reports further enhance the preparation experience.",
-      tech: ["React", "Node.js", "TypeScript", "MongoDB", "LangChain4j", "Java", "Springboot"],
-      image: "/intellimock.png",
-      github: "#",
-      live: "#",
-    },
-    {
-      title: "Clinic Management System (New Zealand College of Chinese Medicine) - In Progress",
-      description:
-        "This full-stack web application was developed for the New Zealand College of Chinese Medicine to streamline patient records, clinical examinations, and booking workflows. The system includes role-based access control, real-time search, and a responsive UI. The platform enhances operational efficiency while adhering to healthcare data privacy best practices.",
-      tech: ["React.js", "Node.js", "Express.js", "Tailwind", "TypeScript", "Supabase"],
-      image: "/cms.png",
-      github: "#",
-      live: "#",
-    },
-  ]
-
   return (
-    <section id="projects" className="relative z-10 py-20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Featured{" "}
-            <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              Projects
-            </span>
-          </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Here are some of my recent projects that showcase my skills and passion for creating innovative solutions
-            for real-world problems.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project) => (
-            <Card
-              key={project.title}
-              className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25"
-            >
-              <CardHeader className="p-0">
-                <div className="relative overflow-hidden rounded-t-lg">
-                  <img
-                    src={project.image || "/placeholder.svg"}
-                    alt={project.title}
-                    className="w-full h-48 object-cover transition-transform duration-300 hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <CardTitle className="text-white text-xl mb-2">{project.title}</CardTitle>
-                <CardDescription className="text-gray-300 mb-4">{project.description}</CardDescription>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.tech.map((tech) => (
-                    <span key={tech} className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded text-sm">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-                {/* <div className="flex gap-4">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-white/30 text-white hover:bg-white hover:text-gray-900 bg-transparent"
-                    asChild
-                  >
-                    <a href={project.github} target="_blank" rel="noopener noreferrer">
-                      <Github className="w-4 h-4 mr-2" />
-                      Code
-                    </a>
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                    asChild
-                  >
-                    <a href={project.live} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Live
-                    </a>
-                  </Button>
-                </div> */}
-              </CardContent>
-            </Card>
+    <section id="projects" aria-label="Featured projects" className="py-24 md:py-32">
+      <div className="mx-auto max-w-6xl px-6">
+        <SectionHeading number="02" slug="projects" title="Featured projects" />
+        <div className="space-y-16 md:space-y-32">
+          {projects.map((project, i) => (
+            <FeatureRow key={project.slug} project={project} index={i} />
           ))}
         </div>
       </div>

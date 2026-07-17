@@ -1,10 +1,16 @@
-import { Mail, Phone, MapPin, Send, MessageSquare, Github, Linkedin, CheckCircle, AlertCircle } from "lucide-react"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { AnimatePresence, motion } from "framer-motion"
+import { useReducedMotionPref as useReducedMotion } from "@/hooks/useMotionPref"
+import { AlertCircle, CheckCircle, Loader2, Mail, MapPin, Phone, Send } from "lucide-react"
+import emailjs from "@emailjs/browser"
+import SectionHeading from "@/components/layout/SectionHeading"
+import Reveal from "@/components/motion/Reveal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useState } from "react"
-import emailjs from '@emailjs/browser'
+import { profile, socials } from "@/data/profile"
+import { socialIcons } from "@/lib/icons"
 
 interface FormData {
   name: string
@@ -13,241 +19,272 @@ interface FormData {
   message: string
 }
 
+type SubmitStatus = "idle" | "success" | "error"
+
+const contactInfo = [
+  { icon: Mail, label: "Email", value: profile.email, href: `mailto:${profile.email}` },
+  { icon: Phone, label: "Phone", value: profile.phone, href: `tel:${profile.phone.replace(/\s/g, "")}` },
+  { icon: MapPin, label: "Location", value: profile.location },
+]
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null
+  return (
+    <p id={id} role="alert" className="mt-1.5 font-mono text-xs text-syntax-rose">
+      {message}
+    </p>
+  )
+}
+
 export default function Contact() {
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [status, setStatus] = useState<SubmitStatus>("idle")
+  const reducedMotion = useReducedMotion()
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>()
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
+  const onSubmit = async (data: FormData) => {
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setSubmitStatus('idle')
+    if (!serviceId || !templateId || !publicKey) {
+      console.warn("EmailJS environment variables are not configured.")
+      setStatus("error")
+      return
+    }
 
     try {
       const templateParams = {
-        from_name: formData.name,
-        from_email: formData.email,
-        subject: formData.subject,
-        message: formData.message,
-        to_email: 'ksahan.des@gmail.com'
+        from_name: data.name,
+        from_email: data.email,
+        subject: data.subject,
+        message: data.message,
+        to_email: "ksahan.des@gmail.com",
       }
-
-      await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        templateParams,
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      )
-
-      setSubmitStatus('success')
-      setFormData({ name: '', email: '', subject: '', message: '' })
+      await emailjs.send(serviceId, templateId, templateParams, publicKey)
+      setStatus("success")
+      reset()
     } catch (error) {
-      console.error('Error sending email:', error)
-      setSubmitStatus('error')
-    } finally {
-      setIsSubmitting(false)
+      console.error("Error sending email:", error)
+      setStatus("error")
     }
   }
+
   return (
-    <section className="relative z-10 py-20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Get In{" "}
-            <span className="bg-gradient-to-r from-pink-400 to-red-500 bg-clip-text text-transparent">Touch</span>
-          </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Ready to start your next project? Let's discuss how we can work together to bring your ideas to life.
-          </p>
-        </div>
+    <section id="contact" aria-label="Contact" className="py-24 md:py-32">
+      <div className="mx-auto max-w-6xl px-6">
+        <SectionHeading number="05" slug="contact" title="Get in touch" />
 
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Info */}
-          <div className="space-y-8">
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-6">Let's Connect</h3>
-              <p className="text-gray-300 mb-8">
-                I'm always interested in hearing about new opportunities and exciting projects. Whether you're a
-                company looking to hire, or you're a fellow developer wanting to collaborate, I'd love to hear from
-                you.
+        <div className="grid gap-12 lg:grid-cols-2">
+          {/* Left: info */}
+          <Reveal>
+            <p className="max-w-md leading-7 text-fg-body">
+              I'm currently open to graduate opportunities. Whether you have a
+              question, a role in mind, or an interesting idea, feel free to reach out!
+            </p>
+
+            <ul className="mt-8 space-y-3">
+              {contactInfo.map((info) => {
+                const Icon = info.icon
+                const content = (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="rounded-lg border border-line bg-surface-2 p-2.5 text-accent-bright"
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span>
+                      <span className="block font-mono text-xs text-fg-muted">{info.label}</span>
+                      <span className="mt-0.5 block text-sm text-fg">{info.value}</span>
+                    </span>
+                  </>
+                )
+                return (
+                  <li key={info.label}>
+                    {info.href ? (
+                      <a
+                        href={info.href}
+                        className="flex items-center gap-4 rounded-card border border-line bg-surface p-4 transition-all duration-200 hover:border-line-bright hover:bg-surface-2"
+                      >
+                        {content}
+                      </a>
+                    ) : (
+                      <span className="flex items-center gap-4 rounded-card border border-line bg-surface p-4">
+                        {content}
+                      </span>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+
+            <ul className="mt-8 flex items-center gap-2">
+              {socials.map((social) => {
+                const Icon = socialIcons[social.icon]
+                const newTab = social.href.startsWith("http") || social.href.endsWith(".pdf")
+                return (
+                  <li key={social.label}>
+                    <motion.a
+                      href={social.href}
+                      aria-label={social.label}
+                      target={newTab ? "_blank" : undefined}
+                      rel={newTab ? "noopener noreferrer" : undefined}
+                      whileHover={reducedMotion ? undefined : { y: -3 }}
+                      className="flex rounded-md border border-line bg-surface p-2.5 text-fg-muted transition-colors hover:border-line-bright hover:text-accent-bright"
+                    >
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </motion.a>
+                  </li>
+                )
+              })}
+            </ul>
+          </Reveal>
+
+          {/* Right: form */}
+          <Reveal delay={0.1}>
+            <div className="rounded-card border border-line bg-surface p-6 md:p-8">
+              <p className="mb-6 font-mono text-sm text-fg-muted">
+                <span aria-hidden="true">~ $ </span>send --message
               </p>
+
+              <AnimatePresence mode="wait" initial={false}>
+                {status === "success" ? (
+                  <motion.div
+                    key="success"
+                    initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="flex flex-col items-center gap-4 py-12 text-center"
+                  >
+                    <motion.span
+                      initial={reducedMotion ? false : { scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 14, delay: 0.1 }}
+                    >
+                      <CheckCircle className="h-12 w-12 text-syntax-green" aria-hidden="true" />
+                    </motion.span>
+                    <p className="font-mono text-sm text-syntax-green">
+                      ✓ message sent — exit code 0
+                    </p>
+                    <p className="text-sm text-fg-muted">
+                      Thanks for reaching out — I'll get back to you soon.
+                    </p>
+                    <Button size="sm" onClick={() => setStatus("idle")}>
+                      Send another
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.form
+                    key="form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onSubmit={handleSubmit(onSubmit)}
+                    noValidate
+                  >
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="contact-name" className="mb-1.5 block font-mono text-xs text-fg-muted">
+                          name
+                        </label>
+                        <Input
+                          id="contact-name"
+                          autoComplete="name"
+                          aria-invalid={!!errors.name}
+                          aria-describedby={errors.name ? "contact-name-error" : undefined}
+                          className={errors.name ? "border-syntax-rose/60" : undefined}
+                          {...register("name", { required: "name is required" })}
+                        />
+                        <FieldError id="contact-name-error" message={errors.name?.message} />
+                      </div>
+                      <div>
+                        <label htmlFor="contact-email" className="mb-1.5 block font-mono text-xs text-fg-muted">
+                          email
+                        </label>
+                        <Input
+                          id="contact-email"
+                          type="email"
+                          autoComplete="email"
+                          aria-invalid={!!errors.email}
+                          aria-describedby={errors.email ? "contact-email-error" : undefined}
+                          className={errors.email ? "border-syntax-rose/60" : undefined}
+                          {...register("email", {
+                            required: "email is required",
+                            pattern: {
+                              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                              message: "enter a valid email",
+                            },
+                          })}
+                        />
+                        <FieldError id="contact-email-error" message={errors.email?.message} />
+                      </div>
+                    </div>
+
+                    <div className="mt-5">
+                      <label htmlFor="contact-subject" className="mb-1.5 block font-mono text-xs text-fg-muted">
+                        subject
+                      </label>
+                      <Input
+                        id="contact-subject"
+                        aria-invalid={!!errors.subject}
+                        aria-describedby={errors.subject ? "contact-subject-error" : undefined}
+                        className={errors.subject ? "border-syntax-rose/60" : undefined}
+                        {...register("subject", { required: "subject is required" })}
+                      />
+                      <FieldError id="contact-subject-error" message={errors.subject?.message} />
+                    </div>
+
+                    <div className="mt-5">
+                      <label htmlFor="contact-message" className="mb-1.5 block font-mono text-xs text-fg-muted">
+                        message
+                      </label>
+                      <Textarea
+                        id="contact-message"
+                        aria-invalid={!!errors.message}
+                        aria-describedby={errors.message ? "contact-message-error" : undefined}
+                        className={errors.message ? "border-syntax-rose/60" : undefined}
+                        {...register("message", {
+                          required: "message is required",
+                          minLength: { value: 10, message: "message must be at least 10 characters" },
+                        })}
+                      />
+                      <FieldError id="contact-message-error" message={errors.message?.message} />
+                    </div>
+
+                    {status === "error" && (
+                      <p role="alert" className="mt-4 flex items-center gap-2 font-mono text-xs text-syntax-rose">
+                        <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        something went wrong — email me directly at{" "}
+                        <a href={`mailto:${profile.email}`} className="underline underline-offset-2">
+                          {profile.email}
+                        </a>
+                      </p>
+                    )}
+
+                    <Button type="submit" size="lg" disabled={isSubmitting} className="mt-6 w-full font-mono">
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                          pushing to inbox...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" aria-hidden="true" />
+                          git commit -m "message"
+                        </>
+                      )}
+                    </Button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
             </div>
-
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Email</h4>
-                  <a href="mailto:ksahan.des@gmail.com" className="text-gray-300 hover:text-white transition-colors">
-                    ksahan.des@gmail.com
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-                  <Phone className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Phone</h4>
-                  <a href="tel:+64225459801" className="text-gray-300 hover:text-white transition-colors">
-                    +64 22 545 9801
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-red-500 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Location</h4>
-                  <p className="text-gray-300">Auckland, New Zealand</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Social Links */}
-            <div className="pt-8">
-              <h4 className="text-white font-medium mb-4">Follow Me</h4>
-              <div className="flex gap-4">
-                <a
-                  href="https://github.com/sdes755"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/20 transition-all duration-300 hover:scale-110"
-                >
-                  <Github className="w-5 h-5" />
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/sahan-de-silva-b641a02b8/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/20 transition-all duration-300 hover:scale-110"
-                >
-                  <Linkedin className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Form */}
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white text-xl flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Send Message
-              </CardTitle>
-              <CardDescription className="text-gray-300">
-                Fill out the form below and I'll get back to you as soon as possible.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {submitStatus === 'success' && (
-                <div className="p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
-                  <div className="flex items-center gap-2 text-green-400">
-                    <CheckCircle className="w-5 h-5" />
-                    <span>Message sent successfully! I'll get back to you soon.</span>
-                  </div>
-                </div>
-              )}
-              
-              {submitStatus === 'error' && (
-                <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-                  <div className="flex items-center gap-2 text-red-400">
-                    <AlertCircle className="w-5 h-5" />
-                    <span>Failed to send message. Please try again or contact me directly.</span>
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label htmlFor="name" className="text-white text-sm font-medium">
-                      Name
-                    </label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Your name"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="email" className="text-white text-sm font-medium">
-                      Email
-                    </label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="your@email.com"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="subject" className="text-white text-sm font-medium">
-                    Subject
-                  </label>
-                  <Input
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    placeholder="What's this about?"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="message" className="text-white text-sm font-medium">
-                    Message
-                  </label>
-                  <Textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    placeholder="Tell me about your project..."
-                    rows={5}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-500 resize-none"
-                    required
-                  />
-                </div>
-                <Button 
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          </Reveal>
         </div>
       </div>
     </section>

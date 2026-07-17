@@ -1,74 +1,151 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+@theme {
+  /* Backgrounds — near-black with a cold blue cast */
+  --color-background: #0a0a0f;
+  --color-surface: #101018;
+  --color-surface-2: #16161f;
+  --color-line: #23232f;
+  --color-line-bright: #32324a;
+
+  /* Accents — electric blue → violet */
+  --color-accent: #3b82f6;
+  --color-accent-bright: #60a5fa;
+  --color-violet: #8b5cf6;
+  --color-violet-bright: #a78bfa;
+
+  /* Syntax-inspired secondary accents (used sparingly) */
+  --color-syntax-green: #34d399;
+  --color-syntax-amber: #fbbf24;
+  --color-syntax-cyan: #22d3ee;
+  --color-syntax-rose: #fb7185;
+
+  /* Text scale (contrast-checked on #0a0a0f) */
+  --color-fg: #f4f4f6;
+  --color-fg-body: #b4b4c0;
+  --color-fg-muted: #7d7d8c;
+
+  /* Typography */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
+
+  --radius-card: 0.75rem;
+
+  /* Keyframes exposed as animate-* utilities */
+  --animate-drift-slow: drift-a 22s ease-in-out infinite alternate;
+  --animate-drift-slower: drift-b 28s ease-in-out infinite alternate;
+  --animate-cursor-blink: cursor-blink 1.1s steps(2, start) infinite;
+  --animate-pulse-dot: pulse-dot 2.4s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
+  --animate-twinkle: twinkle 3s ease-in-out infinite alternate;
+  --animate-marquee: marquee 24s linear infinite;
+
+  @keyframes drift-a {
+    from {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+      transform: translate3d(6rem, 4rem, 0) scale(1.15);
+    }
   }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+  @keyframes drift-b {
+    from {
+      transform: translate3d(0, 0, 0) scale(1.1);
+    }
+    to {
+      transform: translate3d(-5rem, -3rem, 0) scale(1);
+    }
+  }
+  @keyframes cursor-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes pulse-dot {
+    50% {
+      opacity: 0.4;
+    }
+  }
+  @keyframes pulse-ring {
+    from {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    to {
+      transform: scale(2.1);
+      opacity: 0;
+    }
+  }
+  @keyframes twinkle {
+    from {
+      opacity: 0.15;
+    }
+    to {
+      opacity: 0.8;
+    }
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  
   html {
     overscroll-behavior: none;
-    background: rgb(15 23 42); /* slate-900 to match your gradient */
+    background: var(--color-background);
   }
-  
+
+  /* Motion is app-controlled (footer toggle sets data-motion), not tied to the
+     OS reduced-motion setting — animations run for everyone by default. */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  html[data-motion="off"] {
+    scroll-behavior: auto;
+  }
+
+  html[data-motion="off"] .animate-drift-slow,
+  html[data-motion="off"] .animate-drift-slower,
+  html[data-motion="off"] .animate-cursor-blink,
+  html[data-motion="off"] .animate-pulse-dot,
+  html[data-motion="off"] .animate-pulse-ring,
+  html[data-motion="off"] .animate-twinkle,
+  html[data-motion="off"] .animate-marquee {
+    animation: none;
+  }
+
   body {
-    @apply bg-background text-foreground;
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-      sans-serif;
+    min-height: 100svh;
+    background: var(--color-background);
+    color: var(--color-fg-body);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior: none;
-    background: linear-gradient(to bottom right, rgb(15 23 42), rgb(88 28 135), rgb(15 23 42));
-    min-height: 100vh;
+  }
+
+  #root {
+    min-height: 100svh;
+  }
+
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+    color: var(--color-fg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent-bright);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 }

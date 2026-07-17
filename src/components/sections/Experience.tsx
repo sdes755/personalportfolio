@@ -1,138 +1,202 @@
-import { Calendar, MapPin } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState, type ReactNode } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { useReducedMotionPref as useReducedMotion } from "@/hooks/useMotionPref"
+import { ChevronDown, MapPin } from "lucide-react"
+import SectionHeading from "@/components/layout/SectionHeading"
+import Reveal from "@/components/motion/Reveal"
+import { experience } from "@/data/experience"
+import type { ExperienceEntry } from "@/data/types"
+import { cn } from "@/lib/utils"
 
-interface Experience {
-  title: string;
-  company: string;
-  period: string;
-  location: string;
-  description: string;
-  achievements: string[];
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+/** Wraps occurrences of the entry's technologies in a syntax-highlight span. */
+function highlightTech(text: string, tech: string[]): ReactNode[] {
+  if (tech.length === 0) return [text]
+  // Longest first so e.g. "Node.js" wins over "Node"
+  const pattern = [...tech]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp)
+    .join("|")
+  const regex = new RegExp(`(${pattern})`, "gi")
+  const techSet = new Set(tech.map((t) => t.toLowerCase()))
+  return text.split(regex).map((part, i) =>
+    techSet.has(part.toLowerCase()) ? (
+      <span key={i} className="font-mono text-[0.9em] text-syntax-cyan">
+        {part}
+      </span>
+    ) : (
+      part
+    ),
+  )
 }
 
-export default function Experience() {
-  const experiences: Experience[] = [
-    {
-      title: "Software Engineer Intern",
-      company: "Orion Health",
-      period: "November 2025 - February 2026",
-      location: "Auckland, New Zealand",
-      description:
-        "Currently placed on the Patient Engagement Team working on the Digital Front Door Product.",
-      achievements: ["Bug tickets so far."],
-    },
-    {
-      title: "Software Engineering Intern",
-      company: "Aderant",
-      period: "Nov 2024 - Feb 2025, July 2025 - Present",
-      location: "Auckland, New Zealand",
-      description:
-        "Settled into a fast-paced Agile team, contributing across the full stack to enhance a large-scale enterprise application. Gained hands-on experience in modern web development, collaborative problem-solving, CI/CD workflows, and delivering production-ready features that improved internal tooling and client-facing functionality.",
-      achievements: [
-        "Co-Built and Co-Deployed 2 Micro Frontend Components (MFCs) using React, TypeScript, Node.js and Express for the internal Product Library, improving Code Modularity and enabling faster feature development.",
-        "Resolved ~20 Client-Facing bugs and authored 3 new Feature Pages for the Cloud-GL application, directly enhancing usability and client requirements.",
-        "Co-Developed a production-grade API for a major application module, enabling critical functionality and supporting scalability across the Cloud-GL platform.",
-      ],
-    },
-    {
-      title: "Lead Mathematics Tutor",
-      company: "Seriously Addictive Mathematics",
-      period: "2023 - Present",
-      location: "Auckland, New Zealand",
-      description:
-        "As Lead Tutor, I am responsible for delivering high-quality lessons to students across a range of age groups and abilities. My role involves overseeing lesson delivery, supporting student learning, and contributing to a positive and engaging educational environment.",
-      achievements: [
-        "Conducted one-on-one and group sessions whilst utilising creative and engaging teaching methods to promote participation and ensure knowledge retention.",
-        "Tracked student progress, provided regular feedback to parents on student development, and catered to feedback received.",
-      ],
-    }
-  ];
+function TagTokens({ tech }: { tech: string[] }) {
+  return (
+    <>
+      {tech.map((tag) => (
+        <span key={tag} className="whitespace-pre">
+          <span className="text-syntax-amber">tag: </span>
+          <span className="text-syntax-cyan">{tag.toLowerCase()}</span>
+          <span className="text-fg-muted">{"  ·  "}</span>
+        </span>
+      ))}
+    </>
+  )
+}
+
+/** Infinite horizontal marquee of git-style tech tags; static wrap under reduced motion. */
+function TagMarquee({ tech }: { tech: string[] }) {
+  const reducedMotion = useReducedMotion()
+
+  if (reducedMotion) {
+    return (
+      <p className="mt-2 flex flex-wrap border-t border-line pt-2 font-mono text-xs leading-6">
+        <TagTokens tech={tech} />
+      </p>
+    )
+  }
 
   return (
-    <section className="relative z-10 py-20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Work{" "}
-            <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-              Experience
+    <div
+      className="mt-2 overflow-hidden border-t border-line pt-2"
+      style={{
+        maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+      }}
+    >
+      <div
+        className="animate-marquee flex w-max font-mono text-xs leading-6 hover:[animation-play-state:paused]"
+        style={{ animationDuration: `${tech.length * 3}s` }}
+      >
+        <span className="flex shrink-0">
+          <TagTokens tech={tech} />
+        </span>
+        <span className="flex shrink-0" aria-hidden="true">
+          <TagTokens tech={tech} />
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function TimelineEntry({ entry, defaultOpen }: { entry: ExperienceEntry; defaultOpen: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
+  const reducedMotion = useReducedMotion()
+  const detailsId = `experience-${entry.scope}`
+
+  return (
+    <Reveal x={-16} y={0} className="relative pb-14 pl-8 last:pb-0 md:pl-10">
+      {/* Commit node */}
+      <span
+        aria-hidden="true"
+        className="absolute top-5 -left-[5px] flex h-3 w-3 items-center justify-center"
+      >
+        {entry.current && (
+          <span className="animate-pulse-ring absolute h-3 w-3 rounded-full bg-accent" />
+        )}
+        <span className="relative h-3 w-3 rounded-full border-2 border-accent bg-background" />
+      </span>
+
+      <div className="lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-10">
+        {/* Left: git-log snippet card + meta */}
+        <div>
+          <div className="rounded-md border border-line bg-surface-2/50 px-4 py-3">
+            <p className="font-mono text-xs leading-6 break-words md:text-sm">
+              <span aria-hidden="true" className="text-fg-muted">
+                *{" "}
+              </span>
+              <span className="text-syntax-amber">{entry.hash}</span>{" "}
+              <span className="text-syntax-cyan">feat({entry.scope}):</span>{" "}
+              <span className="text-fg-body">{entry.role.toLowerCase()}</span>
+            </p>
+            <TagMarquee tech={[...entry.tech]} />
+          </div>
+          <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-fg-muted">
+            <span>Date: {entry.period}</span>
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" aria-hidden="true" />
+              {entry.location}
             </span>
-          </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            My professional journey and the experiences that have shaped my
-            career so far.
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          {experiences.map((exp, index) => (
-            <div key={exp.title} className="relative mb-12 last:mb-0">
-              {/* Timeline line */}
-              {index !== experiences.length - 1 && (
-                <div className="absolute left-6 top-16 w-0.5 h-full bg-gradient-to-b from-blue-500 to-purple-500 opacity-30" />
-              )}
+        {/* Right: prose */}
+        <div className="mt-5 lg:mt-0">
+          <h3 className="text-xl font-semibold text-fg">{entry.company}</h3>
+          <p className="mt-2 leading-7 text-fg-body">{entry.summary}</p>
 
-              <div className="flex gap-6">
-                {/* Timeline dot */}
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                  <div className="w-6 h-6 bg-white rounded-full" />
-                </div>
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={detailsId}
+            onClick={() => setOpen((o) => !o)}
+            className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs text-accent-bright transition-colors hover:text-fg"
+          >
+            <ChevronDown
+              className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")}
+              aria-hidden="true"
+            />
+            {open ? "hide details" : "show details"}
+          </button>
 
-                {/* Content */}
-                <Card className="flex-1 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                      <div>
-                        <CardTitle className="text-white text-xl">
-                          {exp.title}
-                        </CardTitle>
-                        <CardDescription className="text-blue-300 font-medium">
-                          {exp.company}
-                        </CardDescription>
-                      </div>
-                      <div className="flex flex-col md:items-end gap-1">
-                        <div className="flex items-center gap-2 text-gray-400 text-sm">
-                          <Calendar className="w-4 h-4" />
-                          {exp.period}
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-400 text-sm">
-                          <MapPin className="w-4 h-4" />
-                          {exp.location}
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-300 mb-4">{exp.description}</p>
-                    <div className="space-y-2">
-                      <h4 className="text-white font-medium">
-                        Key Achievements:
-                      </h4>
-                      <ul className="space-y-1">
-                        {exp.achievements.map((achievement, i) => (
-                          <li
-                            key={i}
-                            className="text-gray-300 text-sm flex items-start gap-2"
-                          >
-                            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0" />
-                            {achievement}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+          <AnimatePresence initial={false}>
+            {open && (
+              <motion.div
+                id={detailsId}
+                className="overflow-hidden"
+                initial={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                animate={reducedMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }}
+                exit={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <ul className="mt-4 space-y-2">
+                  {entry.achievements.map((achievement) => (
+                    <li key={achievement} className="flex gap-2 text-sm leading-6 text-fg-muted">
+                      <span aria-hidden="true" className="font-mono text-syntax-green">
+                        +
+                      </span>
+                      <span>{highlightTech(achievement, [...entry.tech])}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </Reveal>
+  )
+}
+
+export default function Experience() {
+  const reducedMotion = useReducedMotion()
+
+  return (
+    <section id="experience" aria-label="Work experience" className="py-24 md:py-32">
+      <div className="mx-auto max-w-6xl px-6">
+        <SectionHeading number="03" slug="experience" title="Where I've worked" />
+
+        <p className="mb-10 -mt-8 font-mono text-sm text-fg-muted md:-mt-12">
+          <span aria-hidden="true">~ $ </span>git log --work --oneline
+        </p>
+
+        <div className="relative">
+          {/* Timeline rail */}
+          <motion.div
+            aria-hidden="true"
+            className="absolute top-1.5 bottom-1.5 left-0 w-0.5 origin-top rounded-full bg-accent/60"
+            initial={reducedMotion ? false : { scaleY: 0 }}
+            whileInView={{ scaleY: 1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          />
+          {experience.map((entry, i) => (
+            <TimelineEntry key={entry.scope} entry={entry} defaultOpen={i === 0} />
           ))}
         </div>
       </div>
     </section>
-  );
+  )
 }
